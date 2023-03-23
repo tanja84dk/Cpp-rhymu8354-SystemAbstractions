@@ -3,7 +3,13 @@
 # © 2018 by Richard Walters
 
 cmake_minimum_required(VERSION 3.8)
-set(This SystemAbstractions)
+project(SystemAbstractions)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+#include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Tanja84dkWarnings.cmake)
+
+find_package(CPM REQUIRED)
+find_package(Cpp-rhymu8354-StringExtensions REQUIRED)
 
 set(Headers
     include/SystemAbstractions/Clipboard.hpp
@@ -106,29 +112,52 @@ if(UNIX)
     )
 endif(UNIX)
 
-add_library(${This} STATIC ${Sources} ${Headers})
-set_target_properties(${This} PROPERTIES
+add_library(${PROJECT_NAME} STATIC ${Sources} ${Headers})
+
+add_library(libs::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+add_library(rhymu8354::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+
+target_include_directories(${PROJECT_NAME}
+	PUBLIC
+		$<INSTALL_INTERFACE:include>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_compile_features(${PROJECT_NAME}
+	PRIVATE
+		cxx_std_14
+)
+
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+	VERSION ${PROJECT_VERSION}
+	SOVERSION ${PROJECT_VERSION_MAJOR}
     FOLDER Libraries
 )
 
-target_link_libraries(${This} PUBLIC
-    StringExtensions
+target_link_libraries(${PROJECT_NAME} PUBLIC
+    rhymu8354::StringExtensions
 )
 
 if(APPLE)
     find_library(AppKit AppKit)
     find_library(CF CoreFoundation)
-    target_link_libraries(${This} PUBLIC ${CF} ${AppKit})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CF} ${AppKit})
 endif(APPLE)
 if(UNIX)
-    target_link_libraries(${This} PUBLIC
+    target_link_libraries(${PROJECT_NAME} PUBLIC
         pthread
         dl
     )
 endif(UNIX)
 
-target_compile_definitions(${This} PRIVATE CLIPBOARD_REVEAL_OS_API)
+target_compile_definitions(${PROJECT_NAME} PRIVATE CLIPBOARD_REVEAL_OS_API)
 
-target_include_directories(${This} PUBLIC include)
-
-add_subdirectory(test)
+if(BUILD_TESTING)
+	add_subdirectory(test)
+endif()

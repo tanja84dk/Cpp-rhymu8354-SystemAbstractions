@@ -1,0 +1,8 @@
+[Bb]uild/
+[Oo]ut/
+*.bak
+*.tmp
+*.sh
+.vscode/
+.vs/
+Makefile
